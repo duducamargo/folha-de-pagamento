@@ -9,14 +9,16 @@ builder.Services.AddDbContext<AppDataContext>();
 var app = builder.Build();
 
 // //POST : CADASTRAR FUNCIONARIO
-app.MapPost("/api/funcionario/cadastrar", ([FromBody] Funcionario funcionario, [FromServices] AppDataContext ctx) => {
+app.MapPost("/api/funcionario/cadastrar", ([FromBody] Funcionario funcionario, [FromServices] AppDataContext ctx) =>
+{
 
-    if ( funcionario == null )
+    if (funcionario == null)
     {
         return Results.NotFound("Funcionário inválido...");
     }
 
-    if(ctx.Funcionarios.Any((ctxFuncionario) => funcionario.Cpf == ctxFuncionario.Cpf)) {
+    if (ctx.Funcionarios.Any((ctxFuncionario) => funcionario.Cpf == ctxFuncionario.Cpf))
+    {
         return Results.NotFound("Funcionário já existe...");
     }
 
@@ -31,10 +33,11 @@ app.MapPost("/api/funcionario/cadastrar", ([FromBody] Funcionario funcionario, [
 });
 
 //GET : LISTAR FUNCIONARIOS
-app.MapGet("/api/funcionario/listar", ([FromServices] AppDataContext ctx) => {
+app.MapGet("/api/funcionario/listar", ([FromServices] AppDataContext ctx) =>
+{
     var funcionarios = ctx.Funcionarios.ToList();
 
-    if ( funcionarios == null )
+    if (funcionarios == null)
     {
         return Results.NotFound("Nenhum funcionario cadastrado...");
     }
@@ -43,19 +46,28 @@ app.MapGet("/api/funcionario/listar", ([FromServices] AppDataContext ctx) => {
 });
 
 //POST : CADASTRAR FOLHA DE PAGAMENTO
-app.MapPost("/api/folha/cadastrar", ([FromBody] Folha folha, [FromServices] AppDataContext ctx) => {
+app.MapPost("/api/folha/cadastrar", ([FromBody] Folha folha, [FromServices] AppDataContext ctx) =>
+{
 
-    if ( folha == null )
+    if (folha == null)
     {
         return Results.NotFound("Folha de Pagamento inválida...");
     }
 
-    if( folha.Mes < 1 || folha.Mes > 12)
+    Funcionario? funcionario = ctx.Funcionarios.FirstOrDefault((funcionario) => funcionario.Id == folha.FuncionarioId);
+
+    if (funcionario == null)
+    {
+        return Results.NotFound("Usuario não existe");
+    }
+
+    if (folha.Mes < 1 || folha.Mes > 12)
     {
         return Results.NotFound("Mês inválido...");
     }
 
-    if(ctx.Folhas.Any((x) => x.Mes == folha.Mes && x.FuncionarioId == folha.FuncionarioId)) {
+    if (ctx.Folhas.Any((x) => x.Mes == folha.Mes && x.FuncionarioId == folha.FuncionarioId))
+    {
         return Results.NotFound("Pagamento do Mês já realizado!");
     }
 
@@ -63,39 +75,48 @@ app.MapPost("/api/folha/cadastrar", ([FromBody] Folha folha, [FromServices] AppD
 
     folha.SalarioBruto = folha.Valor * folha.Quantidade;
 
-    if (folha.SalarioBruto <= 1903.98) {
-            folha.ImpostoIrrf = 0;
+    if (folha.SalarioBruto <= 1903.98)
+    {
+        folha.ImpostoIrrf = 0;
     }
 
-    else if (folha.SalarioBruto > 1903.98 && folha.SalarioBruto <= 2826.65 ) {
+    else if (folha.SalarioBruto > 1903.98 && folha.SalarioBruto <= 2826.65)
+    {
         folha.ImpostoIrrf = (folha.SalarioBruto * 0.075);
     }
 
-    else if (folha.SalarioBruto > 2826.65 && folha.SalarioBruto <= 3751.05) {
+    else if (folha.SalarioBruto > 2826.65 && folha.SalarioBruto <= 3751.05)
+    {
         folha.ImpostoIrrf = (folha.SalarioBruto * 0.15);
     }
 
-    else if(folha.SalarioBruto > 3751.05 && folha.SalarioBruto <= 4664.68) {
+    else if (folha.SalarioBruto > 3751.05 && folha.SalarioBruto <= 4664.68)
+    {
         folha.ImpostoIrrf = (folha.SalarioBruto * 0.225);
     }
 
-    else {
+    else
+    {
         folha.ImpostoIrrf = (folha.SalarioBruto * 0.275);
     }
 
-    if (folha.SalarioBruto <= 1693.72) {
-            folha.ImpostoInss = (folha.SalarioBruto * 0.08);
+    if (folha.SalarioBruto <= 1693.72)
+    {
+        folha.ImpostoInss = (folha.SalarioBruto * 0.08);
     }
 
-    else if (folha.SalarioBruto > 1693.72 && folha.SalarioBruto <= 2822.90 ) {
+    else if (folha.SalarioBruto > 1693.72 && folha.SalarioBruto <= 2822.90)
+    {
         folha.ImpostoInss = (folha.SalarioBruto * 0.09);
     }
 
-    else if (folha.SalarioBruto > 2822.90 && folha.SalarioBruto <= 5645.80) {
+    else if (folha.SalarioBruto > 2822.90 && folha.SalarioBruto <= 5645.80)
+    {
         folha.ImpostoInss = (folha.SalarioBruto * 0.11);
     }
 
-    else {
+    else
+    {
         folha.ImpostoInss = 621.03;
     }
 
@@ -112,12 +133,13 @@ app.MapPost("/api/folha/cadastrar", ([FromBody] Folha folha, [FromServices] AppD
 });
 
 //GET : LISTAR FOLHAS DE PAGAMENTO
-app.MapGet("/api/folha/listar", ([FromServices] AppDataContext ctx) => {
+app.MapGet("/api/folha/listar", ([FromServices] AppDataContext ctx) =>
+{
     var folhas = ctx.Folhas.ToList();
 
     folhas.ForEach((folha) => folha.Funcionario = ctx.Funcionarios.FirstOrDefault((funcionario) => funcionario.Id == folha.FuncionarioId));
 
-    if ( folhas == null )
+    if (folhas == null)
     {
         return Results.NotFound("Nenhum funcionario cadastrado...");
     }
@@ -125,18 +147,25 @@ app.MapGet("/api/folha/listar", ([FromServices] AppDataContext ctx) => {
     return Results.Ok(folhas);
 });
 
-//GET : LISTAR FOLHAS DE PAGAMENTO
-app.MapGet("/api/folha/buscar/{cpf}/{mes}/{ano}", ( [FromRoute] string cpf, int mes, int ano ,[FromServices] AppDataContext ctx) => {
+app.MapGet("/api/folha/buscar/{cpf}/{mes}/{ano}", ([FromRoute] string cpf, int mes, int ano, [FromServices] AppDataContext ctx) =>
+{
+    var funcionario = ctx.Funcionarios.FirstOrDefault(funcionario => funcionario.Cpf == cpf);
 
-    var folha = ctx.Folhas.FirstOrDefault((x) => x.Funcionario.Cpf == cpf && x.Mes == mes && x.Ano == ano);
-    folha.Funcionario = ctx.Funcionarios.FirstOrDefault((funcionario) => funcionario.Id == folha.FuncionarioId);
-
-    if ( folha == null )
+    if (funcionario == null)
     {
-        return Results.NotFound("Nenhuma Folha encontrada...");
+        return Results.NotFound("Nenhum funcionário encontrado com esse CPF.");
     }
+
+    var folha = ctx.Folhas.FirstOrDefault(f => f.Funcionario.Cpf == cpf && f.Mes == mes && f.Ano == ano);
+
+    if (folha == null)
+    {
+        return Results.NotFound("Nenhuma folha de pagamento encontrada para o funcionário no período especificado.");
+    }
+    folha.Funcionario = funcionario;
 
     return Results.Ok(folha);
 });
+
 
 app.Run();
